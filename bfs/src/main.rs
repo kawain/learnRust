@@ -93,11 +93,11 @@ fn result_display(arg1: &mut Vec<Vec<char>>, arg2: &HashMap<Point, i32>) {
     // ゴールの場所から見ていく
     let mut goal = Point(0, 0);
 
-    for (i1, v1) in arg1.iter().enumerate() {
+    'outer: for (i1, v1) in arg1.iter().enumerate() {
         for (i2, v2) in v1.iter().enumerate() {
             if *v2 == 'G' {
                 goal = Point(i1 as i32, i2 as i32);
-                break;
+                break 'outer;
             }
         }
     }
