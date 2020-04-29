@@ -120,3 +120,51 @@ $ cargo run --release
 ```
 $ cargo clean
 ```
+
+# Rustにはnightly、beta、stableという3種類の配布用チャネルがある
+
+標準ではstableを使いますが、クレートによってはnightly必須というものもあります。
+
+## ナイトリをインストール
+
+```
+$ rustup install nightly
+```
+
+## rustupでインストールした全ツールチェーン確認
+
+```
+$ rustup toolchain list
+stable-x86_64-unknown-linux-gnu (default)
+nightly-x86_64-unknown-linux-gnu
+```
+
+## defaultをnightlyに変える場合
+
+```
+$ rustup default nightly
+$ rustup toolchain list
+stable-x86_64-unknown-linux-gnu
+nightly-x86_64-unknown-linux-gnu (default)
+```
+
+## 標準の環境は変えないけれど、このプロジェクトはnightlyでビルドしたいという場合
+
+```
+$ rustup run nightly cargo run
+```
+
+```
+$ rustup run nightly cargo build
+```
+
+```
+$ rustup run nightly cargo build --release
+```
+
+
+
+
+
+
+
