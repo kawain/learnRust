@@ -65,6 +65,32 @@ mod tests {
     }
 }
 ```
+`#[ignore]`でテストを無視できる  
+testでprint内容を表示したければ　`cargo test -- --nocapture`　で実行
+```
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    // #[ignore]
+    fn it_works() {
+        let input = "let five = 5;";
+        let l = Lexer::new(input.to_string());
+
+        println!("{:?}", l);
+
+        assert_eq!("let five = 5;", l.input);
+    }
+}
+
+$ cargo test -- --nocapture
+
+running 1 test
+Lexer { input: "let five = 5;", position: 0, read_position: 1, ch: 'l' }
+test lexer::tests::it_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
 こういう関数を作成してテストがpassしてから
 ```
 pub fn hello() -> String {
