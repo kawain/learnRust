@@ -5,7 +5,7 @@ use std::io;
 use std::io::prelude::*;
 
 fn main() {
-    println!("迷路の大きさを5以上で入力(奇数でお願いします)");
+    println!("迷路の大きさ(5以上101以下の奇数)を入力してください");
 
     let mut input = String::new();
     io::stdin()
@@ -14,8 +14,8 @@ fn main() {
 
     match input.trim().parse::<usize>() {
         Ok(v) => {
-            if v % 2 == 0 && v >= 5 {
-                println!("最低5以上の奇数でお願いします");
+            if v % 2 == 0 || v < 5 || v > 101 {
+                println!("5以上101以下の奇数でお願いします");
             } else {
                 let maze2 = anahori(v);
                 display(&maze2);
@@ -57,8 +57,9 @@ fn anahori(n: usize) -> Vec<Vec<u8>> {
             break;
         }
 
-        // 2つ先地点が 1（壁）なら ok
-        let f = move_maze(&mut maze, row, col);
+        // 1つ先が壁で2つ先も壁なら true
+        let f = move_maze(&mut maze, row, col, n);
+        // falseなら戻る
         if f.0 == false {
             let p = stack.pop().unwrap();
             row = p.0;
@@ -75,9 +76,8 @@ fn anahori(n: usize) -> Vec<Vec<u8>> {
     maze
 }
 
-fn move_maze(maze: &mut Vec<Vec<u8>>, row: usize, col: usize) -> (bool, usize, usize) {
+fn move_maze(maze: &mut Vec<Vec<u8>>, row: usize, col: usize, n: usize) -> (bool, usize, usize) {
     let mut lst = vec!["up", "down", "left", "right"];
-    let maze_len = maze.len();
 
     loop {
         // ランダムに選択
@@ -105,9 +105,10 @@ fn move_maze(maze: &mut Vec<Vec<u8>>, row: usize, col: usize) -> (bool, usize, u
             c2 = c2 + 2;
         }
 
-        // 2つ先地点が 1（壁）なら ok
-        if r2 < maze_len as i32 && c2 < maze_len as i32 && r2 >= 0 && c2 >= 0 {
-            if maze[r2 as usize][c2 as usize] == 1 {
+        // 2つ先が迷路からはみ出ていないか確認
+        if r2 < n as i32 && c2 < n as i32 && r2 >= 0 && c2 >= 0 {
+            // 1つ先が壁で2つ先も壁なら ok
+            if maze[r1 as usize][c1 as usize] == 1 && maze[r2 as usize][c2 as usize] == 1 {
                 maze[r1 as usize][c1 as usize] = 0;
                 maze[r2 as usize][c2 as usize] = 0;
                 return (true, r2 as usize, c2 as usize);
