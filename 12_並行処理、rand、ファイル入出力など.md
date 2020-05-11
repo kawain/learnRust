@@ -177,3 +177,113 @@ fn main() {
 }
 ```
 
+## テキストファイル入出力
+
+ファイルがなければ新規作成して書き込む  
+ファイルがあれば上書き
+```
+use std::fs::OpenOptions;
+use std::io::Write;
+
+fn main() {
+    let b = "私は誰でもない！あなたは誰？
+あなたも誰でもないの？
+なら、私たちは組だね、何も言わないで！
+あの人たちは、私たちを追放するでしょう。わかりますよね？
+
+誰かでいるなんて侘しいじゃない！
+カエルみたいで公すぎるじゃない。
+自分の名を長い1日に告げるのなんて。
+感服するような沼地にね！"
+        .as_bytes();
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open("poem.txt")
+        .unwrap();
+
+    file.write_all(b).unwrap();
+}
+```
+ファイルがなければ新規作成して書き込む  
+ファイルがあれば追加して書き込む
+```
+use std::fs::OpenOptions;
+use std::io::Write;
+
+fn main() {
+    let b = "私は誰でもない！あなたは誰？
+あなたも誰でもないの？
+なら、私たちは組だね、何も言わないで！
+あの人たちは、私たちを追放するでしょう。わかりますよね？
+
+誰かでいるなんて侘しいじゃない！
+カエルみたいで公すぎるじゃない。
+自分の名を長い1日に告げるのなんて。
+感服するような沼地にね！"
+        .as_bytes();
+
+    let mut file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("poem.txt")
+        .unwrap();
+
+    file.write_all(b).unwrap();
+}
+```
+読み込む
+```
+use std::fs;
+
+fn main() {
+    let foo = fs::read_to_string("poem.txt").unwrap();
+    println!("{}", foo);
+}
+```
+読む場合 BufReader を使用する方が早いらしい
+```
+use std::fs::File;
+use std::io::{BufReader, Read};
+
+fn main() {
+    let file = File::open("poem.txt").unwrap();
+    let mut buf_reader = BufReader::new(file);
+
+    let mut contents = String::new();
+    buf_reader.read_to_string(&mut contents).unwrap();
+
+    println!("{}", contents);
+}
+```
+書く場合も BufWriter を使用する方が早いらしい
+```
+use std::fs::OpenOptions;
+use std::io::{BufWriter, Write};
+
+fn main() {
+    let b = "私は誰でもない！あなたは誰？
+あなたも誰でもないの？
+なら、私たちは組だね、何も言わないで！
+あの人たちは、私たちを追放するでしょう。わかりますよね？
+
+誰かでいるなんて侘しいじゃない！
+カエルみたいで公すぎるじゃない。
+自分の名を長い1日に告げるのなんて。
+感服するような沼地にね！"
+        .as_bytes();
+
+    let file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open("poem.txt")
+        .unwrap();
+
+    let mut f = BufWriter::new(file);
+
+    f.write_all(b).unwrap();
+}
+```
