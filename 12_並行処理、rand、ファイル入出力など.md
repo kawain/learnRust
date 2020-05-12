@@ -287,3 +287,148 @@ fn main() {
     f.write_all(b).unwrap();
 }
 ```
+
+## panic!マクロ
+
+わざとエラーを起こします
+
+```
+fn panic_test(n: i32) -> bool {
+    // わざとパニック
+    if n > 10 {
+        panic!("クラッシュして炎上");
+    }
+    true
+}
+
+fn main() {
+    let f = panic_test(11);
+    println!("{}", f);
+}
+```
+
+## エラーハンドリング
+
+Option型とResult型の復習と値の取り出し方
+
+先程のコードでpanicを起こさないように考えてみます
+
+### 値がない可能性がある場合はOption型を用いる
+
+```
+enum Option<T> {
+    None,
+    Some(T),
+}
+```
+Option型で返す
+```
+fn panic_test(n: i32) -> Option<bool> {
+    if n > 10 {
+        return None;
+    }
+    Some(true)
+}
+
+fn main() {
+    let f = panic_test(11);
+    // そのまま見るとSomeで包まれているかNone
+    println!("{:?}", f);
+    //マッチで中身を取り出す
+    match f {
+        Some(v) => println!("{}", v),
+        None => println!("ありませんでした"),
+    }
+}
+```
+
+### エラーが発生する可能性がある場合はResult型を用いる
+
+```
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+Result型で返す
+```
+fn panic_test(n: i32) -> Result<bool, String> {
+    if n > 10 {
+        return Err("クラッシュして炎上".to_string());
+    }
+    Ok(true)
+}
+
+fn main() {
+    let f = panic_test(11);
+    // そのまま見るとOkかErrで包まれている
+    println!("{:?}", f);
+    //マッチで中身を取り出す
+    match f {
+        Ok(v) => println!("{}", v),
+        Err(e) => println!("{}", e),
+    }
+}
+```
+
+### refとref mutでパターンに参照を生成
+
+matchアームパターンで変数を生成すると、値の所有権が奪われる
+```
+fn main() {
+    let robot_name = Some(String::from("Bors"));
+
+    match robot_name {
+        Some(name) => println!("Found a name: {}", name),
+        None => (),
+    }
+
+    println!("robot_name is: {:?}", robot_name);
+}
+```
+変数の前にrefキーワードを使用
+```
+fn main() {
+    let robot_name = Some(String::from("Bors"));
+
+    match robot_name {
+        Some(ref name) => println!("Found a name: {}", name),
+        None => (),
+    }
+
+    println!("robot_name is: {:?}", robot_name);
+}
+```
+可変参照を生成するには、&mutの代わりにref mut
+```
+fn main() {
+    let mut robot_name = Some(String::from("Bors"));
+
+    match robot_name {
+        // name は参照なので、*name参照外しで値を更新
+        Some(ref mut name) => *name = String::from("Another name"),
+        None => (),
+    }
+
+    println!("robot_name is: {:?}", robot_name);
+}
+```
+
+### マッチでifを使う場合
+
+```
+fn main() {
+    let num = Some(4);
+
+    match num {
+        // 5未満です: {}
+        Some(x) if x < 5 => println!("less than five: {}", x),
+        Some(x) => println!("{}", x),
+        None => (),
+    }
+}
+```
+
+以上
+
+https://doc.rust-jp.rs/book/second-edition/ch18-03-pattern-syntax.html
