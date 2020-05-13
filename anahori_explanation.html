@@ -230,9 +230,8 @@
 
         function printStack() {
             let text = ""
-            const rv = p.stack.reverse()
-            for (const v of rv) {
-                text += `(${v.row} ${v.col})\n`
+            for (const v of p.stack) {
+                text = `(${v.row} ${v.col})\n` + text
             }
             textarea1.value = text
         }
