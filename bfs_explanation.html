@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幅優先探索</title>
+</head>
+
+<body>
+    <h1>幅優先探索</h1>
+    <p>
+        参考：
+        <a href="https://qiita.com/nati-ueno/items/a789095aff0aec10d5d0">https://qiita.com/nati-ueno/items/a789095aff0aec10d5d0</a>
+        など、検索すればたくさん出てきます
+    </p>
+
+    <h3>こういう迷路だとします</h3>
+    <textarea id="textarea1" cols="30" rows="10">
+###############
+#S#     #     #
+# # # ### ### #
+#   #     #   #
+# ######### ###
+# #       #   #
+# ### # ##### #
+#     # #     #
+######### ### #
+#       #   # #
+# ##### ### ###
+# #G# #   #   #
+# # # ### ### #
+#   #         #
+###############
+</textarea>
+
+    <p>
+        <button id="button1">処理</button>
+    </p>
+
+    <div style="margin: 20px 0;">
+        <canvas id="canvas" width="450" height="450"></canvas>
+    </div>
+
+    <pre>
+###################
+#     #     #     #
+# ##### ### ##### #
+# #     # # #     #
+# # ##### # # ### #
+# #     #     #G  #
+# ##### # ####### #
+#S    # # #     # #
+# ### # ### ### # #
+#   # #     # # # #
+##### ####### ### #
+#           #     #
+# # ######### #####
+# # #       # #   #
+# ### ##### # # ###
+#   # #     # #   #
+# # # # ##### ### #
+# #   #           #
+###################
+
+#########################
+#S          #           #
+# ####### ### ######### #
+# #     #   # # # #     #
+# ##### ### # # # # #####
+#       #   #   #     # #
+####### # ########### # #
+#   #   #   #       # # #
+# # # ##### # ### ### # #
+# # #   # #     # #   # #
+### ### # ####### # ### #
+#   # #     #     # #   #
+# # # ##### # ##### # # #
+# #   #     #   #   # # #
+# ##### ####### # ##### #
+#     #   #   #   #     #
+# ### ### # # ##### ### #
+# #G#   #   # #   #   # #
+# # ### ##### # # # # ###
+# # #     #   # # # #   #
+# # # ### # ### # ##### #
+# # #   # #     #     # #
+# # ### ############# # #
+#     #                 #
+#########################
+    </pre>
+    <script>
+        const canvas = document.getElementById("canvas")
+        const ctx = canvas.getContext("2d")
+        const w = canvas.width
+        const h = canvas.height
+        const textarea1 = document.getElementById("textarea1")
+        const button1 = document.getElementById("button1")
+        let maze
+        let len
+        let cellSize
+        let count = 0
+        let start
+        let goal
+        // 動ける場所とstep数
+        let passage
+        let queue
+
+        function init() {
+            maze = []
+            len
+            cellSize
+            start = []
+            goal = []
+            passage = {}
+            queue = []
+
+            // キャンバスに描画
+            ctx.fillStyle = "#ccc"
+            ctx.fillRect(0, 0, w, h)
+
+            const text = textarea1.value
+            const textRow = text.split("\n")
+
+            for (v1 of textRow) {
+                if (v1 === "") {
+                    continue
+                }
+                const tmp = []
+                for (v2 of v1) {
+                    tmp.push(v2)
+                }
+                maze.push(tmp)
+            }
+
+            len = maze.length
+            cellSize = w / len
+
+            for (let i = 0; i < len; i++) {
+                for (let n = 0; n < len; n++) {
+                    if (maze[i][n] === "#") {
+                        ctx.fillStyle = "#000"
+                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                    } else if (maze[i][n] === "S") {
+                        ctx.fillStyle = "#0000ff"
+                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                        // スタート地点を覚えておく
+                        start.push(i)
+                        start.push(n)
+                        passage[start] = 0
+                    } else if (maze[i][n] === "G") {
+                        ctx.fillStyle = "#ff0000"
+                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                        // ゴール地点を覚えておく
+                        goal.push(i)
+                        goal.push(n)
+                        passage[goal] = -1
+                    } else {
+                        passage[[i, n]] = -1
+                    }
+                }
+            }
+
+            if (start.length === 0 || goal.length === 0) {
+                alert("スタート・ゴールを記入してください")
+                return
+            }
+        }
+
+        function search() {
+            queue.push([...start, 0])
+            setTimeout(searchloop, 100);
+        }
+
+        function searchloop() {
+            // 探索待ちキューにノードがあれば取り出す。なければ全ノード探索完了。
+            if (queue.length === 0) {
+                shortestDrawing()
+                return
+            }
+
+            let tmp = queue.shift()
+
+            // console.log(tmp)
+            ctx.fillStyle = "#000"
+            ctx.font = "20px 'ＭＳ ゴシック'";
+            ctx.fillText(passage[[tmp[0], tmp[1]]], tmp[1] * cellSize, tmp[0] * cellSize + 20, 20);
+            maze[tmp[0]][tmp[1]] = tmp[2]
+
+            // 取り出したノードが目的ノードであれば探索完了。
+            if (tmp[0] === goal[0] && tmp[1] === goal[1]) {
+                shortestDrawing()
+                return
+            }
+
+            // 取り出したノードに隣接するノードの内、未探索のノードを探索待ちキューに追加する。
+            if (passage[[tmp[0] - 1, tmp[1]]] === -1) {
+                queue.push([tmp[0] - 1, tmp[1], tmp[2] + 1])
+                passage[[tmp[0] - 1, tmp[1]]] = tmp[2] + 1
+            }
+
+            if (passage[[tmp[0] + 1, tmp[1]]] === -1) {
+                queue.push([tmp[0] + 1, tmp[1], tmp[2] + 1])
+                passage[[tmp[0] + 1, tmp[1]]] = tmp[2] + 1
+            }
+
+            if (passage[[tmp[0], tmp[1] - 1]] === -1) {
+                queue.push([tmp[0], tmp[1] - 1, tmp[2] + 1])
+                passage[[tmp[0], tmp[1] - 1]] = tmp[2] + 1
+            }
+
+            if (passage[[tmp[0], tmp[1] + 1]] === -1) {
+                queue.push([tmp[0], tmp[1] + 1, tmp[2] + 1])
+                passage[[tmp[0], tmp[1] + 1]] = tmp[2] + 1
+            }
+
+            setTimeout(searchloop, 100);
+        }
+
+        function shortestDrawing() {
+            let i = goal[0]
+            let n = goal[1]
+            let c = maze[i][n]
+            ctx.fillStyle = "#ff0000"
+            ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+            ctx.fillStyle = "#ffff00"
+            while (c > 1) {
+                if (maze[i - 1][n] === c - 1) {
+                    i--
+                    ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                } else if (maze[i + 1][n] === c - 1) {
+                    i++
+                    ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                } else if (maze[i][n - 1] === c - 1) {
+                    n--
+                    ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                } else if (maze[i][n + 1] === c - 1) {
+                    n++
+                    ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                }
+                c--
+            }
+
+            count = 0
+        }
+
+        button1.addEventListener("click", () => {
+            if (count === 0) {
+                init()
+            } else if (count === 1) {
+                search()
+            }
+
+            count++
+        })
+
+
+
+    </script>
+</body>
+
+</html>
