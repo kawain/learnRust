@@ -90,34 +90,34 @@
 #########################
     </pre>
     <script>
+
         const canvas = document.getElementById("canvas")
         const ctx = canvas.getContext("2d")
         const w = canvas.width
         const h = canvas.height
         const textarea1 = document.getElementById("textarea1")
         const button1 = document.getElementById("button1")
-        let maze
-        let len
+
+        let len = 0
+        let maze = []
         let cellSize
-        let count = 0
-        let start
-        let goal
-        // 動ける場所とstep数
-        let passage
-        let queue
+        let gameState = 0
+        let start = []
+        let goal = []
+        let passage = {}
+        let queue = []
+
 
         function init() {
+            // キャンバスに描画
+            ctx.fillStyle = "#abc"
+            ctx.fillRect(0, 0, w, h)
+
             maze = []
-            len
-            cellSize
             start = []
             goal = []
             passage = {}
             queue = []
-
-            // キャンバスに描画
-            ctx.fillStyle = "#ccc"
-            ctx.fillRect(0, 0, w, h)
 
             const text = textarea1.value
             const textRow = text.split("\n")
@@ -139,18 +139,13 @@
             for (let i = 0; i < len; i++) {
                 for (let n = 0; n < len; n++) {
                     if (maze[i][n] === "#") {
-                        ctx.fillStyle = "#000"
-                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+
                     } else if (maze[i][n] === "S") {
-                        ctx.fillStyle = "#0000ff"
-                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
                         // スタート地点を覚えておく
                         start.push(i)
                         start.push(n)
                         passage[start] = 0
                     } else if (maze[i][n] === "G") {
-                        ctx.fillStyle = "#ff0000"
-                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
                         // ゴール地点を覚えておく
                         goal.push(i)
                         goal.push(n)
@@ -160,22 +155,13 @@
                     }
                 }
             }
-
-            if (start.length === 0 || goal.length === 0) {
-                alert("スタート・ゴールを記入してください")
-                return
-            }
-        }
-
-        function search() {
             queue.push([...start, 0])
-            setTimeout(searchloop, 100);
         }
 
         function searchloop() {
             // 探索待ちキューにノードがあれば取り出す。なければ全ノード探索完了。
             if (queue.length === 0) {
-                shortestDrawing()
+                gameState = 3
                 return
             }
 
@@ -184,12 +170,13 @@
             // console.log(tmp)
             ctx.fillStyle = "#000"
             ctx.font = "20px 'ＭＳ ゴシック'";
-            ctx.fillText(passage[[tmp[0], tmp[1]]], tmp[1] * cellSize, tmp[0] * cellSize + 20, 20);
+            ctx.textAlign = "left";
+            ctx.fillText(passage[[tmp[0], tmp[1]]], tmp[1] * cellSize + 4, tmp[0] * cellSize + 20, 20);
             maze[tmp[0]][tmp[1]] = tmp[2]
 
             // 取り出したノードが目的ノードであれば探索完了。
             if (tmp[0] === goal[0] && tmp[1] === goal[1]) {
-                shortestDrawing()
+                gameState = 3
                 return
             }
 
@@ -213,8 +200,6 @@
                 queue.push([tmp[0], tmp[1] + 1, tmp[2] + 1])
                 passage[[tmp[0], tmp[1] + 1]] = tmp[2] + 1
             }
-
-            setTimeout(searchloop, 100);
         }
 
         function shortestDrawing() {
@@ -241,20 +226,43 @@
                 c--
             }
 
-            count = 0
+            ctx.fillStyle = "#0000ff"
+            ctx.fillRect(start[1] * cellSize, start[0] * cellSize, cellSize, cellSize)
+
+            gameState = 0
         }
 
         button1.addEventListener("click", () => {
-            if (count === 0) {
+            if (gameState === 0) {
                 init()
-            } else if (count === 1) {
-                search()
             }
-
-            count++
+            gameState++
         })
 
+        function draw() {
+            for (let i = 0; i < len; i++) {
+                for (let n = 0; n < len; n++) {
+                    if (maze[i][n] === "#") {
+                        ctx.fillStyle = "#000"
+                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                    } else if (maze[i][n] === "S") {
+                        ctx.fillStyle = "#0000ff"
+                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                    } else if (maze[i][n] === "G") {
+                        ctx.fillStyle = "#ff0000"
+                        ctx.fillRect(n * cellSize, i * cellSize, cellSize, cellSize)
+                    }
+                }
+            }
+            if (gameState === 2) {
+                searchloop()
+            } else if (gameState === 3) {
+                shortestDrawing()
+                // clearInterval(game)
+            }
+        }
 
+        let game = setInterval(draw, 100)
 
     </script>
 </body>
